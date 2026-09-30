@@ -1,0 +1,691 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Pritom Siddique — PritomX Innovation Hub</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/fontsource/fonts/inter@latest/latin-400-normal.css"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/fontsource/fonts/inter@latest/latin-600-normal.css"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/fontsource/fonts/inter@latest/latin-800-normal.css"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/fontsource/fonts/jetbrains-mono@latest/latin-400-normal.css"/>
+<style>
+  /* ==========================================
+     ORIGINAL SITE STYLES (Untouched Core)
+     ========================================== */
+  :root{
+    --bg:#0f172a;
+    --bg-2:#0b1120;
+    --card:rgba(15, 23, 42, 0.7);
+    --border:rgba(3, 233, 244, 0.2);
+    --text:#f8fafc;
+    --muted:#94a3b8;
+    --accent:#03e9f4;
+    --accent-2:#3b82f6;
+    --accent-3:#10b981;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:'Inter',system-ui,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    margin:0;
+    line-height:1.6;
+    overflow-x:hidden;
+  }
+  .mono{font-family:'JetBrains Mono',monospace}
+  .gradient-text{
+    background:linear-gradient(90deg, #03e9f4, #3b82f6, #10b981);
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+    background-size:200% 200%;
+    animation:flow 6s ease infinite;
+  }
+  @keyframes flow{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+  
+  .glow-card{
+    background:linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.01));
+    border:1px solid var(--border);
+    border-radius:16px;
+    transition:all .35s ease;
+    position:relative;
+    overflow:hidden;
+    backdrop-filter: blur(10px);
+  }
+  .glow-card::before{
+    content:'';
+    position:absolute;
+    inset:0;
+    background:radial-gradient(600px circle at var(--mx,50%) var(--my,50%),rgba(3, 233, 244, 0.12),transparent 40%);
+    opacity:0;
+    transition:opacity .3s;
+    pointer-events:none;
+  }
+  .glow-card:hover::before{opacity:1}
+  .glow-card:hover{
+    border-color:rgba(3, 233, 244, 0.6);
+    transform:translateY(-4px);
+    box-shadow: 0 10px 30px -10px rgba(3, 233, 244, 0.3);
+  }
+  .btn-primary{
+    background:transparent;
+    color:var(--accent);
+    padding:.8rem 1.6rem;
+    border-radius:999px;
+    font-weight:600;
+    display:inline-flex;
+    align-items:center;
+    gap:.5rem;
+    border: 1px solid var(--accent);
+    transition:all .3s;
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-primary:hover{
+    background:var(--accent);
+    color:#050801;
+    box-shadow:0 0 15px rgba(3, 233, 244, 0.6), 0 0 30px rgba(3, 233, 244, 0.4);
+    transform:translateY(-2px);
+  }
+  .btn-ghost{
+    border:1px solid var(--border);
+    padding:.8rem 1.6rem;
+    border-radius:999px;
+    font-weight:600;
+    display:inline-flex;
+    align-items:center;
+    gap:.5rem;
+    transition:all .3s;
+  }
+  .btn-ghost:hover{border-color:var(--accent);color:var(--accent)}
+  .chip{
+    padding:.35rem .8rem;
+    border:1px solid var(--border);
+    border-radius:999px;
+    font-size:.8rem;
+    color:var(--accent);
+    background:rgba(3, 233, 244, 0.05);
+  }
+  .hero-bg{
+    position:absolute;
+    inset:0;
+    background:
+      radial-gradient(60% 60% at 20% 20%,rgba(3, 233, 244, 0.15),transparent 60%),
+      radial-gradient(50% 50% at 80% 30%,rgba(59, 130, 246, 0.12),transparent 60%),
+      radial-gradient(40% 40% at 50% 80%,rgba(16, 185, 129, 0.1),transparent 60%);
+    filter:blur(30px);
+    z-index:0;
+  }
+  .grid-bg{
+    position:absolute;
+    inset:0;
+    background-image:
+      linear-gradient(rgba(3, 233, 244, 0.05) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(3, 233, 244, 0.05) 1px,transparent 1px);
+    background-size:48px 48px;
+    mask-image:radial-gradient(ellipse at center,black 50%,transparent 90%);
+    z-index:0;
+  }
+  .section-title{
+    font-size:clamp(1.8rem,3vw,2.4rem);
+    font-weight:800;
+    letter-spacing:-.02em;
+    margin:0 0 .5rem;
+  }
+  .section-label{
+    font-family:'JetBrains Mono',monospace;
+    color:var(--accent);
+    font-size:.85rem;
+    text-transform:uppercase;
+    letter-spacing:.15em;
+    margin-bottom:.5rem;
+    display:inline-block;
+  }
+  .reveal{opacity:0;transform:translateY(30px);transition:all .8s cubic-bezier(.22,1,.36,1)}
+  .reveal.visible{opacity:1;transform:translateY(0)}
+  .timeline{position:relative;padding-left:2rem}
+  .timeline::before{
+    content:'';
+    position:absolute;
+    left:8px;top:8px;bottom:8px;
+    width:2px;
+    background:linear-gradient(180deg,var(--accent),var(--accent-2),transparent);
+  }
+  .timeline-item{position:relative;padding-bottom:2rem}
+  .timeline-item::before{
+    content:'';
+    position:absolute;
+    left:-2rem;
+    top:8px;
+    width:18px;height:18px;
+    border-radius:50%;
+    background:var(--bg);
+    border:2px solid var(--accent);
+    box-shadow:0 0 10px rgba(3, 233, 244, 0.4);
+  }
+  .skill-bar{
+    height:6px;
+    background:rgba(255,255,255,0.06);
+    border-radius:999px;
+    overflow:hidden;
+  }
+  .skill-fill{
+    height:100%;
+    background:linear-gradient(90deg,var(--accent),var(--accent-2));
+    border-radius:999px;
+    width:0;
+    transition:width 1.5s cubic-bezier(.22,1,.36,1);
+    box-shadow: 0 0 10px var(--accent);
+  }
+  .project-img{
+    aspect-ratio:16/10;
+    overflow:hidden;
+    border-radius:12px;
+    position:relative;
+  }
+  .project-img img{
+    width:100%;height:100%;object-fit:cover;
+    transition:transform .6s ease;
+  }
+  .glow-card:hover .project-img img{transform:scale(1.06)}
+  
+  .stat-num{
+    font-size:2.5rem;
+    font-weight:800;
+    line-height:1;
+    letter-spacing:-.02em;
+  }
+  input,textarea{
+    background:rgba(15, 23, 42, 0.5);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:.9rem 1rem;
+    color:var(--text);
+    width:100%;
+    font-family:inherit;
+    transition:all .3s;
+  }
+  input:focus,textarea:focus{
+    outline:none;
+    border-color:var(--accent);
+    box-shadow: 0 0 10px rgba(3, 233, 244, 0.2);
+  }
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--accent-3);box-shadow:0 0 8px var(--accent-3)}
+
+  /* ==========================================
+     ISOLATED SPLASH SCREEN STYLES (px- prefix)
+     ========================================== */
+  .px-splash-wrapper {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    background-color: #050801;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    transition: opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1), visibility 0.8s;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  .px-splash-wrapper.px-splash-hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+  .px-splash-content {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+  }
+  .px-splash-ring {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: conic-gradient(from 0deg, transparent, #03e9f4, #3b82f6, #10b981, transparent);
+    -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #fff calc(100% - 4px));
+    mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #fff calc(100% - 4px));
+    animation: px-splash-spin 1.5s linear infinite;
+    filter: drop-shadow(0 0 12px rgba(3, 233, 244, 0.6));
+  }
+  @keyframes px-splash-spin { to { transform: rotate(360deg); } }
+  .px-splash-logo {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: #f8fafc;
+    letter-spacing: -0.02em;
+    margin-top: 0.5rem;
+  }
+  .px-splash-accent { 
+    color: #03e9f4; 
+    text-shadow: 0 0 15px rgba(3, 233, 244, 0.6); 
+  }
+  .px-splash-typing {
+    font-family: 'JetBrains Mono', monospace;
+    color: #10b981;
+    font-size: 0.85rem;
+    letter-spacing: 0.05em;
+    border-right: 2px solid #10b981;
+    white-space: nowrap;
+    overflow: hidden;
+    animation: px-splash-blink 0.8s step-end infinite;
+    min-height: 1.2em;
+  }
+  @keyframes px-splash-blink { 50% { border-color: transparent; } }
+  .px-splash-progress-track {
+    width: 180px;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 99px;
+    overflow: hidden;
+    margin-top: 0.5rem;
+  }
+  .px-splash-progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #03e9f4, #10b981);
+    border-radius: 99px;
+    box-shadow: 0 0 10px #03e9f4;
+    animation: px-splash-load 4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+  @keyframes px-splash-load { 0% { width: 0%; } 100% { width: 100%; } }
+
+
+  /* ==========================================
+     ISOLATED SPLASH PROFILE CARD MENU HEADER 
+     (px-h- prefix guarantees ZERO conflict)
+     ========================================== */
+  .px-h-wrapper {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 9000;
+    background: rgba(15, 23, 42, 0.75);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(3, 233, 244, 0.15);
+    transition: all 0.4s ease;
+  }
+  .px-h-wrapper.px-h-scrolled {
+    background: rgba(11, 17, 32, 0.95);
+    box-shadow: 0 10px 30px -10px rgba(3, 233, 244, 0.1);
+    border-bottom-color: rgba(3, 233, 244, 0.3);
+  }
+  .px-h-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+  }
+  
+  /* Profile Card Part */
+  .px-h-profile {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  .px-h-avatar-ring {
+    position: relative;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    padding: 2px;
+    background: conic-gradient(from 0deg, var(--accent), var(--accent-2), var(--accent-3), var(--accent));
+    animation: px-h-spin 6s linear infinite;
+    flex-shrink: 0;
+  }
+  @keyframes px-h-spin { to { transform: rotate(360deg); } }
+  .px-h-avatar-ring img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    background: var(--bg);
+    border: 2px solid var(--bg);
+  }
+  .px-h-info {
+    display: flex;
+    flex-direction: column;
+  }
+  .px-h-name {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--text);
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+  .px-h-name span {
+    color: var(--accent);
+    text-shadow: 0 0 10px rgba(3, 233, 244, 0.4);
+  }
+  .px-h-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--accent-3);
+    margin-top: 2px;
+  }
+
+  /* Menu Part */
+  .px-h-menu {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .px-h-link {
+    position: relative;
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+  }
+  .px-h-link:hover, .px-h-link.px-h-active {
+    color: var(--accent);
+    background: rgba(3, 233, 244, 0.05);
+  }
+  .px-h-link::after {
+    content: '';
+    position: absolute;
+    bottom: 4px;
+    left: 50%;
+    transform: translateX(-50%) scaleX(0);
+    width: 20px;
+    height: 2px;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: transform 0.3s ease;
+    box-shadow: 0 0 8px var(--accent);
+  }
+  .px-h-link:hover::after, .px-h-link.px-h-active::after {
+    transform: translateX(-50%) scaleX(1);
+  }
+  .px-h-cta {
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    padding: 0.5rem 1.25rem;
+    border-radius: 99px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    text-decoration: none;
+    margin-left: 0.5rem;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .px-h-cta:hover {
+    background: var(--accent);
+    color: #050801;
+    box-shadow: 0 0 15px rgba(3, 233, 244, 0.5);
+    transform: translateY(-1px);
+  }
+
+  /* Mobile Menu Toggle */
+  .px-h-mobile-btn {
+    display: none;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--accent);
+    padding: 0.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  .px-h-mobile-btn:hover {
+    background: rgba(3, 233, 244, 0.1);
+  }
+
+  /* Mobile Dropdown */
+  .px-h-mobile-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: rgba(11, 17, 32, 0.98);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 1rem 1.5rem;
+    flex-direction: column;
+    gap: 0.5rem;
+    transform: translateY(-10px);
+    opacity: 0;
+    transition: all 0.3s ease;
+    pointer-events: none;
+  }
+  .px-h-mobile-menu.px-h-open {
+    display: flex;
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .px-h-mobile-link {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 1rem;
+    font-weight: 600;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+  }
+  .px-h-mobile-link:hover {
+    color: var(--accent);
+    background: rgba(3, 233, 244, 0.05);
+    border-color: rgba(3, 233, 244, 0.2);
+  }
+
+  @media (max-width: 900px) {
+    .px-h-menu { display: none; }
+    .px-h-mobile-btn { display: flex; }
+    .px-h-container { padding: 0.75rem 1rem; }
+    .px-h-avatar-ring { width: 48px; height: 48px; }
+    .px-h-name { font-size: 1.1rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ==========================================
+     1. ISOLATED SPLASH SCREEN (4 Seconds)
+     ========================================== -->
+<div id="px-splash-wrapper" class="px-splash-wrapper">
+  <div class="px-splash-content">
+    <div class="px-splash-ring"></div>
+    <div class="px-splash-logo">Pritom<span class="px-splash-accent">X</span></div>
+    <div class="px-splash-typing" id="px-splash-typing"></div>
+    <div class="px-splash-progress-track">
+      <div class="px-splash-progress-fill"></div>
+    </div>
+  </div>
+</div>
+<!-- ========================================== -->
+
+
+<!-- ==========================================
+     2. ISOLATED SPLASH PROFILE CARD MENU HEADER
+     ========================================== -->
+<header class="px-h-wrapper" id="pxHeader">
+  <div class="px-h-container">
+    <!-- Profile Card Section -->
+    <div class="px-h-profile">
+      <div class="px-h-avatar-ring">
+        <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80" alt="Pritom Siddique"/>
+      </div>
+      <div class="px-h-info">
+        <div class="px-h-name">Pritom <span>Siddique</span></div>
+        <div class="px-h-title">&lt;Cyber Dev & Growth Hacker /&gt;</div>
+      </div>
+    </div>
+
+    <!-- Desktop Menu Section -->
+    <nav class="px-h-menu">
+      <a href="#about" class="px-h-link">About</a>
+      <a href="#skills" class="px-h-link">Skills</a>
+      <a href="#experience" class="px-h-link">Experience</a>
+      <a href="#projects" class="px-h-link">Projects</a>
+      <a href="#contact" class="px-h-cta">Hire Me <span>→</span></a>
+    </nav>
+
+    <!-- Mobile Toggle Button -->
+    <button class="px-h-mobile-btn" id="pxMobileToggle" aria-label="Toggle Menu">
+      <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M3 6h18M3 12h18M3 18h18"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Mobile Dropdown Menu -->
+  <div class="px-h-mobile-menu" id="pxMobileMenu">
+    <a href="#about" class="px-h-mobile-link">About</a>
+    <a href="#skills" class="px-h-mobile-link">Skills</a>
+    <a href="#experience" class="px-h-mobile-link">Experience</a>
+    <a href="#projects" class="px-h-mobile-link">Projects</a>
+    <a href="#contact" class="px-h-mobile-link" style="color: var(--accent); border-color: var(--accent);">Hire Me →</a>
+  </div>
+</header>
+<!-- ========================================== -->
+
+
+<!-- HERO (Adjusted padding-top to clear the fixed header) -->
+<section id="home" class="relative min-h-screen flex items-center pt-32 pb-16 overflow-hidden">
+  <div class="hero-bg"></div>
+  <div class="grid-bg"></div>
+  <div class="relative z-10 max-w-6xl mx-auto px-6 grid md:grid-cols-2 gap-12 items-center w-full">
+    <div>
+      <div class="inline-flex items-center gap-2 chip mb-6">
+        <span class="dot"></span>
+        <span>Open to Cyber & Marketing Roles</span>
+      </div>
+      
+
+<script>
+  // ==========================================
+  // 1. ISOLATED SPLASH SCREEN LOGIC (4 Seconds)
+  // ==========================================
+  document.addEventListener('DOMContentLoaded', () => {
+    const splashWrapper = document.getElementById('px-splash-wrapper');
+    const typingElement = document.getElementById('px-splash-typing');
+    
+    document.body.style.overflow = 'hidden'; // Lock scroll
+
+    const textToType = "Initializing PritomX Cyber Hub...";
+    let charIndex = 0;
+    const typeInterval = setInterval(() => {
+      if (charIndex < textToType.length) {
+        typingElement.textContent += textToType.charAt(charIndex);
+        charIndex++;
+      } else {
+        clearInterval(typeInterval);
+      }
+    }, 40);
+
+    setTimeout(() => {
+      splashWrapper.classList.add('px-splash-hidden');
+      setTimeout(() => {
+        if (splashWrapper && splashWrapper.parentNode) {
+          splashWrapper.remove();
+        }
+        document.body.style.overflow = ''; // Unlock scroll
+      }, 800);
+    }, 4000);
+  });
+
+  // ==========================================
+  // 2. ISOLATED HEADER LOGIC (Scroll & Mobile)
+  // ==========================================
+  const pxHeader = document.getElementById('pxHeader');
+  const pxMobileToggle = document.getElementById('pxMobileToggle');
+  const pxMobileMenu = document.getElementById('pxMobileMenu');
+  const pxMobileLinks = document.querySelectorAll('.px-h-mobile-link');
+
+  // Scroll effect for header
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 50) {
+      pxHeader.classList.add('px-h-scrolled');
+    } else {
+      pxHeader.classList.remove('px-h-scrolled');
+    }
+  });
+
+  // Mobile menu toggle
+  pxMobileToggle.addEventListener('click', () => {
+    pxMobileMenu.classList.toggle('px-h-open');
+  });
+
+  // Close mobile menu when a link is clicked
+  pxMobileLinks.forEach(link => {
+    link.addEventListener('click', () => {
+      pxMobileMenu.classList.remove('px-h-open');
+    });
+  });
+
+  // Active link highlighting on scroll
+  const sections = document.querySelectorAll('section[id]');
+  const pxNavLinks = document.querySelectorAll('.px-h-link');
+  
+  window.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(section => {
+      const sectionTop = section.offsetTop - 150;
+      if (window.scrollY >= sectionTop) {
+        current = section.getAttribute('id');
+      }
+    });
+    pxNavLinks.forEach(link => {
+      link.classList.remove('px-h-active');
+      if (link.getAttribute('href') === '#' + current) {
+        link.classList.add('px-h-active');
+      }
+    });
+  });
+
+  // ==========================================
+  // 3. ORIGINAL SITE SCRIPTS (Untouched)
+  // ==========================================
+  // Reveal on scroll
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){
+        e.target.classList.add('visible');
+        e.target.querySelectorAll('.skill-fill').forEach(b=>{
+          b.style.width = b.dataset.w;
+        });
+        io.unobserve(e.target);
+      }
+    });
+  },{threshold:0.12});
+  document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+
+  // Card mouse glow (Cyber Effect)
+  document.querySelectorAll('.glow-card').forEach(card=>{
+    card.addEventListener('mousemove',e=>{
+      const r = card.getBoundingClientRect();
+      card.style.setProperty('--mx',(e.clientX-r.left)+'px');
+      card.style.setProperty('--my',(e.clientY-r.top)+'px');
+    });
+  });
+
+  // Contact form
+  document.getElementById('contactForm').addEventListener('submit',e=>{
+    e.preventDefault();
+    const msg = document.getElementById('formMsg');
+    msg.classList.remove('hidden');
+    e.target.reset();
+    setTimeout(()=>msg.classList.add('hidden'),4000);
+  });
+</script>
+</body>
+</html>
+```
