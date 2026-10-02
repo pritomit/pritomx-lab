@@ -1,0 +1,1489 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=5">
+<meta name="theme-color" content="#0b0e13">
+<title>PritomX Floating Multi-Window v2</title>
+<style>
+/* ============================================================
+   SCOPED STYLES — .pxm- prefix, isolated
+============================================================ */
+.pxm-root{
+  --pxm-bg:#0b0e13; --pxm-card:#151a23; --pxm-card2:#1c2330;
+  --pxm-line:#232b38; --pxm-txt:#eef1f6; --pxm-mut:#8b94a7;
+  --pxm-acc:#0065ee; --pxm-acc2:#6c8cff; --pxm-acc3:#a78bfa;
+  --pxm-ok:#22c55e; --pxm-wa:#25d366; --pxm-wa2:#128c7e;
+  --pxm-danger:#ef4444;
+  position:relative;display:block;color:var(--pxm-txt);
+  font-family:system-ui,-apple-system,'Segoe UI',Roboto,'Noto Sans Bengali',sans-serif;
+  font-size:14px;line-height:1.5;isolation:isolate;
+}
+.pxm-root *, .pxm-root *::before, .pxm-root *::after{box-sizing:border-box;}
+.pxm-root button{cursor:pointer;border:none;background:none;color:inherit;font-family:inherit;}
+.pxm-root input, .pxm-root textarea{font-family:inherit;}
+.pxm-root img{display:block;max-width:100%;}
+
+/* ============ RIGHT LAUNCHER ============ */
+.pxm-bar{
+  position:fixed;right:12px;top:50%;transform:translateY(-50%);z-index:9990;
+  display:flex;flex-direction:column;gap:5px;padding:9px 7px;
+  background:rgba(21,26,35,.92);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border:1px solid var(--pxm-line);border-radius:16px;
+  box-shadow:0 10px 40px rgba(0,0,0,.6);max-height:88vh;overflow-y:auto;scrollbar-width:none;
+}
+.pxm-bar::-webkit-scrollbar{display:none;}
+.pxm-bar-btn{
+  width:44px;height:44px;border-radius:12px;background:var(--pxm-card2);
+  border:1px solid var(--pxm-line);font-size:19px;
+  display:flex;align-items:center;justify-content:center;transition:.18s;flex-shrink:0;
+}
+.pxm-bar-btn:hover{background:var(--pxm-acc);border-color:var(--pxm-acc);transform:scale(1.08);}
+.pxm-bar-btn.pxm-active{
+  background:linear-gradient(135deg,var(--pxm-acc),var(--pxm-acc2));
+  border-color:var(--pxm-acc2);box-shadow:0 4px 16px rgba(108,140,255,.4);
+}
+
+/* ============ MAIN PANEL ============ */
+.pxm-panel{
+  position:fixed;right:72px;top:0;bottom:0;z-index:9989;
+  width:420px;max-width:calc(100vw - 84px);background:var(--pxm-bg);
+  border-left:1px solid var(--pxm-line);border-right:1px solid var(--pxm-line);
+  display:flex;flex-direction:column;transform:translateX(calc(100% + 20px));
+  transition:transform .32s cubic-bezier(.4,0,.2,1);
+  box-shadow:-20px 0 60px rgba(0,0,0,.5);overflow:hidden;
+}
+.pxm-panel.pxm-open{transform:translateX(0);}
+.pxm-tabstrip{
+  display:flex;align-items:center;gap:6px;padding:8px 10px;
+  background:var(--pxm-card);border-bottom:1px solid var(--pxm-line);flex-shrink:0;
+}
+.pxm-tabs{flex:1;display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;}
+.pxm-tabs::-webkit-scrollbar{display:none;}
+.pxm-tab{
+  display:flex;align-items:center;gap:5px;padding:7px 9px 7px 11px;
+  background:var(--pxm-card2);border:1px solid var(--pxm-line);border-radius:9px;
+  font-size:12px;white-space:nowrap;cursor:pointer;transition:.15s;
+  flex-shrink:0;max-width:140px;color:var(--pxm-mut);
+}
+.pxm-tab:hover{border-color:var(--pxm-acc2);color:var(--pxm-txt);}
+.pxm-tab.pxm-tab-active{
+  color:var(--pxm-txt);
+  background:linear-gradient(90deg,rgba(0,101,238,.25),rgba(108,140,255,.2));
+  border-color:var(--pxm-acc2);
+}
+.pxm-tab-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.pxm-tab-close{
+  display:flex;align-items:center;justify-content:center;
+  width:16px;height:16px;border-radius:50%;font-size:10px;color:var(--pxm-mut);flex-shrink:0;
+}
+.pxm-tab-close:hover{background:rgba(255,80,80,.2);color:#ff6b6b;}
+.pxm-tabstrip-close{
+  width:32px;height:32px;border-radius:9px;color:var(--pxm-mut);font-size:14px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.pxm-tabstrip-close:hover{background:var(--pxm-card2);color:#ff6b6b;}
+.pxm-body{flex:1;overflow-y:auto;padding:14px;}
+.pxm-body::-webkit-scrollbar{width:6px;}
+.pxm-body::-webkit-scrollbar-thumb{background:var(--pxm-line);border-radius:6px;}
+.pxm-pane{animation:pxmFadeIn .25s;}
+@keyframes pxmFadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.pxm-pane-head{margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--pxm-line);}
+.pxm-pane-head h4{
+  font-size:14px;font-weight:600;margin:0;
+  background:linear-gradient(90deg,var(--pxm-acc2),var(--pxm-acc3));
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+}
+.pxm-p{font-size:13px;color:var(--pxm-mut);margin-bottom:14px;line-height:1.6;}
+
+/* Inputs / buttons */
+.pxm-inp{
+  width:100%;padding:10px 12px;background:var(--pxm-card);border:1px solid var(--pxm-line);
+  color:var(--pxm-txt);border-radius:10px;font-size:13.5px;outline:none;margin-bottom:8px;transition:.2s;
+}
+.pxm-inp:focus{border-color:var(--pxm-acc);box-shadow:0 0 0 3px rgba(0,101,238,.15);}
+.pxm-btn{padding:9px 14px;border-radius:10px;font-size:13px;font-weight:500;transition:.18s;color:#fff;}
+.pxm-btn-primary{background:linear-gradient(90deg,var(--pxm-acc),var(--pxm-acc2));}
+.pxm-btn-ok{background:linear-gradient(90deg,#10b981,#059669);}
+.pxm-btn-ghost{background:var(--pxm-card2);color:var(--pxm-txt);border:1px solid var(--pxm-line);}
+.pxm-btn:hover{opacity:.9;transform:translateY(-1px);}
+.pxm-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
+
+/* AI grid */
+.pxm-ai-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
+.pxm-ai-card{
+  background:var(--pxm-card);border:1px solid var(--pxm-line);border-radius:11px;
+  padding:10px;display:flex;align-items:center;gap:8px;transition:.2s;
+  text-decoration:none;color:inherit;font-size:12.5px;cursor:pointer;
+}
+.pxm-ai-card:hover{border-color:var(--pxm-acc);transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,101,238,.15);}
+.pxm-ai-card img{width:26px;height:26px;border-radius:7px;background:#fff;padding:2px;flex-shrink:0;}
+.pxm-ai-card b{display:block;font-size:12.5px;font-weight:600;}
+.pxm-ai-card span{font-size:10.5px;color:var(--pxm-mut);}
+.pxm-ai-card .pxm-launch{
+  margin-left:auto;font-size:10px;padding:2px 6px;border-radius:8px;
+  background:rgba(108,140,255,.15);color:var(--pxm-acc2);
+}
+
+/* Action links */
+.pxm-act-link{
+  display:block;padding:12px 16px;border-radius:11px;font-size:14px;font-weight:600;
+  text-align:center;transition:.2s;color:#fff;text-decoration:none;
+}
+.pxm-act-link:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.3);}
+.pxm-fb{background:linear-gradient(135deg,#1877f2,#0a5bd8);}
+.pxm-wa{background:linear-gradient(135deg,#25d366,#128c7e);}
+.pxm-call{background:linear-gradient(135deg,#22c55e,#15803d);}
+.pxm-msg{background:linear-gradient(135deg,#0084ff,#0064d2);}
+
+/* Code editor */
+.pxm-code{
+  width:100%;min-height:130px;background:#0a0d13;color:#e6edf3;
+  border:1px solid var(--pxm-line);border-radius:10px;padding:10px;
+  font-family:'SF Mono',Consolas,Monaco,monospace;font-size:12.5px;line-height:1.55;
+  resize:vertical;outline:none;margin-bottom:8px;
+}
+.pxm-code:focus{border-color:var(--pxm-acc);}
+.pxm-frame{width:100%;height:220px;background:#fff;border:1px solid var(--pxm-line);border-radius:10px;margin-top:6px;}
+
+/* Saved list */
+.pxm-saved-list{margin-top:12px;}
+.pxm-saved-item{
+  display:flex;align-items:center;gap:8px;padding:8px 10px;
+  background:var(--pxm-card);border:1px solid var(--pxm-line);border-radius:9px;
+  margin-bottom:6px;font-size:12.5px;
+}
+.pxm-saved-item img{width:20px;height:20px;border-radius:5px;background:#fff;padding:2px;}
+.pxm-saved-item span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.pxm-saved-item button{color:var(--pxm-mut);font-size:13px;padding:2px 6px;border-radius:5px;}
+.pxm-saved-item button:hover{background:var(--pxm-card2);color:var(--pxm-txt);}
+
+/* Photo grid */
+.pxm-photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+.pxm-photo-grid img{
+  width:100%;aspect-ratio:1;object-fit:cover;border-radius:9px;cursor:pointer;transition:.25s;
+}
+.pxm-photo-grid img:hover{transform:scale(1.05);box-shadow:0 8px 20px rgba(0,0,0,.4);}
+
+/* Footer */
+.pxm-footer{background:var(--pxm-card);border:1px solid var(--pxm-line);border-radius:11px;padding:14px;}
+.pxm-footer-cols{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding-bottom:14px;border-bottom:1px solid var(--pxm-line);}
+.pxm-footer-cols b{display:block;font-size:12px;margin-bottom:6px;}
+.pxm-footer-cols a{display:block;font-size:11.5px;color:var(--pxm-mut);margin-bottom:4px;text-decoration:none;}
+.pxm-footer-cols a:hover{color:var(--pxm-acc2);}
+.pxm-footer-bottom{font-size:11px;color:var(--pxm-mut);text-align:center;padding-top:12px;}
+
+/* ============ WHATSAPP FAB ============ */
+.pxm-wa-fab{
+  position:fixed;right:16px;bottom:24px;z-index:9992;
+  width:58px;height:58px;border-radius:50%;
+  background:linear-gradient(135deg,var(--pxm-wa),var(--pxm-wa2));color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 8px 24px rgba(37,211,102,.5);transition:.25s;
+  animation:pxmWaPulse 2s infinite;
+}
+.pxm-wa-fab:hover{transform:scale(1.08);}
+.pxm-wa-fab svg{width:30px;height:30px;}
+.pxm-wa-dot{
+  position:absolute;top:6px;right:6px;width:12px;height:12px;
+  border-radius:50%;background:#ff3b30;border:2px solid #fff;
+}
+@keyframes pxmWaPulse{
+  0%,100%{box-shadow:0 8px 24px rgba(37,211,102,.5),0 0 0 0 rgba(37,211,102,.5);}
+  50%{box-shadow:0 8px 24px rgba(37,211,102,.5),0 0 0 14px rgba(37,211,102,0);}
+}
+
+/* ============ WHATSAPP CHAT ============ */
+.pxm-wa-chat{
+  position:fixed;right:16px;bottom:96px;z-index:9993;
+  width:340px;max-width:calc(100vw - 32px);max-height:72vh;
+  background:var(--pxm-bg);border:1px solid var(--pxm-line);border-radius:16px;
+  display:flex;flex-direction:column;overflow:hidden;
+  box-shadow:0 20px 60px rgba(0,0,0,.6);opacity:0;
+  transform:translateY(20px) scale(.95);pointer-events:none;
+  transition:.28s cubic-bezier(.34,1.56,.64,1);
+}
+.pxm-wa-chat.pxm-open{opacity:1;transform:translateY(0) scale(1);pointer-events:auto;}
+.pxm-wa-head{
+  display:flex;align-items:center;gap:10px;padding:12px 14px;
+  background:linear-gradient(135deg,var(--pxm-wa),var(--pxm-wa2));color:#fff;flex-shrink:0;
+}
+.pxm-wa-avatar{
+  width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.2);
+  display:flex;align-items:center;justify-content:center;font-size:18px;
+}
+.pxm-wa-info{flex:1;line-height:1.3;}
+.pxm-wa-info b{font-size:13.5px;display:block;}
+.pxm-wa-info small{font-size:11px;opacity:.9;display:flex;align-items:center;gap:4px;}
+.pxm-wa-online{width:7px;height:7px;border-radius:50%;background:#aef;box-shadow:0 0 6px #aef;}
+.pxm-wa-close{color:#fff;font-size:16px;padding:4px 8px;border-radius:6px;}
+.pxm-wa-close:hover{background:rgba(255,255,255,.15);}
+
+.pxm-wa-body{
+  flex:1;overflow-y:auto;padding:14px;background:var(--pxm-card);min-height:200px;
+}
+.pxm-wa-body::-webkit-scrollbar{width:5px;}
+.pxm-wa-body::-webkit-scrollbar-thumb{background:var(--pxm-line);border-radius:5px;}
+
+.pxm-wa-msg{
+  margin-bottom:12px;max-width:82%;padding:9px 12px;border-radius:12px;
+  font-size:13px;line-height:1.5;word-wrap:break-word;
+  animation:pxmMsgIn .25s ease;
+}
+@keyframes pxmMsgIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.pxm-wa-in{background:var(--pxm-card2);color:var(--pxm-txt);border-top-left-radius:4px;margin-right:auto;}
+.pxm-wa-out{
+  background:linear-gradient(135deg,var(--pxm-wa),var(--pxm-wa2));color:#fff;
+  border-top-right-radius:4px;margin-left:auto;text-align:right;
+}
+.pxm-wa-msg small{display:block;font-size:10px;opacity:.6;margin-top:3px;}
+
+/* Typing indicator */
+.pxm-wa-typing{
+  display:flex;gap:4px;padding:10px 14px;background:var(--pxm-card2);
+  border-radius:12px;border-top-left-radius:4px;width:60px;margin-bottom:12px;
+}
+.pxm-wa-typing span{
+  width:7px;height:7px;border-radius:50%;background:var(--pxm-mut);
+  animation:pxmTyping 1.4s infinite;
+}
+.pxm-wa-typing span:nth-child(2){animation-delay:.2s;}
+.pxm-wa-typing span:nth-child(3){animation-delay:.4s;}
+@keyframes pxmTyping{
+  0%,60%,100%{transform:translateY(0);opacity:.4;}
+  30%{transform:translateY(-5px);opacity:1;}
+}
+
+.pxm-wa-quick{
+  display:flex;gap:6px;padding:8px 10px;overflow-x:auto;
+  background:var(--pxm-card);border-top:1px solid var(--pxm-line);scrollbar-width:none;flex-shrink:0;
+}
+.pxm-wa-quick::-webkit-scrollbar{display:none;}
+.pxm-wa-quick button{
+  padding:6px 11px;background:var(--pxm-card2);border:1px solid var(--pxm-line);
+  border-radius:20px;font-size:11.5px;white-space:nowrap;color:var(--pxm-txt);
+  transition:.15s;flex-shrink:0;
+}
+.pxm-wa-quick button:hover{border-color:var(--pxm-wa);color:var(--pxm-wa);}
+
+.pxm-wa-input{
+  display:flex;gap:8px;padding:10px;background:var(--pxm-card);
+  border-top:1px solid var(--pxm-line);flex-shrink:0;
+}
+.pxm-wa-input input{
+  flex:1;padding:10px 12px;background:var(--pxm-bg);border:1px solid var(--pxm-line);
+  color:var(--pxm-txt);border-radius:10px;font-size:13px;outline:none;
+}
+.pxm-wa-input input:focus{border-color:var(--pxm-wa);}
+.pxm-wa-input button{
+  width:42px;height:42px;border-radius:50%;
+  background:linear-gradient(135deg,var(--pxm-wa),var(--pxm-wa2));color:#fff;
+  font-size:18px;display:flex;align-items:center;justify-content:center;
+}
+.pxm-wa-input button:hover{transform:scale(1.05);}
+
+/* ============ WEBVIEW / BROWSER WIDGET (Universal) ============ */
+.pxm-wv{
+  position:fixed;z-index:9994;
+  width:min(560px, 94vw);height:min(70vh, 620px);
+  min-width:280px;min-height:200px;
+  right:80px;bottom:100px;
+  background:var(--pxm-bg);border:1px solid var(--pxm-line);border-radius:14px;
+  overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,.6);
+  display:flex;flex-direction:column;
+  opacity:0;transform:scale(.9);pointer-events:none;
+  transition:.25s cubic-bezier(.34,1.56,.64,1);
+}
+.pxm-wv.pxm-open{opacity:1;transform:scale(1);pointer-events:auto;}
+
+/* Widget tab bar */
+.pxm-wv-tabs{
+  display:flex;align-items:center;gap:4px;padding:6px 8px;
+  background:var(--pxm-card);border-bottom:1px solid var(--pxm-line);
+  overflow-x:auto;scrollbar-width:none;flex-shrink:0;
+}
+.pxm-wv-tabs::-webkit-scrollbar{display:none;}
+.pxm-wv-tab{
+  display:flex;align-items:center;gap:5px;padding:5px 8px;border-radius:7px;
+  background:var(--pxm-card2);border:1px solid var(--pxm-line);
+  font-size:11.5px;white-space:nowrap;cursor:pointer;flex-shrink:0;
+  max-width:140px;color:var(--pxm-mut);transition:.15s;
+}
+.pxm-wv-tab:hover{border-color:var(--pxm-acc2);color:var(--pxm-txt);}
+.pxm-wv-tab.pxm-active{
+  color:var(--pxm-txt);
+  background:linear-gradient(90deg,rgba(0,101,238,.25),rgba(108,140,255,.2));
+  border-color:var(--pxm-acc2);
+}
+.pxm-wv-tab .pxm-wv-fav{width:14px;height:14px;border-radius:3px;background:#fff;padding:1px;flex-shrink:0;}
+.pxm-wv-tab .pxm-wv-tlabel{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.pxm-wv-tab .pxm-wv-tx{
+  width:14px;height:14px;border-radius:50%;font-size:9px;
+  display:flex;align-items:center;justify-content:center;color:var(--pxm-mut);
+}
+.pxm-wv-tab .pxm-wv-tx:hover{background:rgba(255,80,80,.2);color:#ff6b6b;}
+.pxm-wv-newtab{
+  width:26px;height:26px;border-radius:7px;background:var(--pxm-card2);
+  border:1px solid var(--pxm-line);color:var(--pxm-mut);font-size:14px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.pxm-wv-newtab:hover{border-color:var(--pxm-acc2);color:var(--pxm-acc2);}
+
+/* Mac traffic lights + URL */
+.pxm-wv-bar{
+  display:flex;gap:6px;padding:8px 10px;
+  background:var(--pxm-card);border-bottom:1px solid var(--pxm-line);
+  align-items:center;cursor:grab;user-select:none;flex-shrink:0;
+}
+.pxm-wv-bar:active{cursor:grabbing;}
+.pxm-wv-dots{display:flex;gap:5px;margin-right:4px;flex-shrink:0;}
+.pxm-wv-dots span{width:11px;height:11px;border-radius:50%;cursor:pointer;}
+.pxm-wv-dots span:nth-child(1){background:#ff5f57;}
+.pxm-wv-dots span:nth-child(2){background:#febc2e;}
+.pxm-wv-dots span:nth-child(3){background:#28c840;}
+
+.pxm-wv-engine{
+  background:var(--pxm-card2);border:1px solid var(--pxm-line);color:var(--pxm-txt);
+  padding:5px 8px;border-radius:7px;font-size:11px;outline:none;
+  flex-shrink:0;cursor:pointer;
+}
+.pxm-wv-url{
+  flex:1;background:var(--pxm-bg);border:1px solid var(--pxm-line);
+  color:var(--pxm-txt);padding:6px 10px;border-radius:7px;
+  font-size:12px;outline:none;min-width:0;
+}
+.pxm-wv-url:focus{border-color:var(--pxm-acc);}
+.pxm-wv-btn{
+  width:28px;height:28px;border-radius:7px;color:var(--pxm-mut);font-size:13px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.pxm-wv-btn:hover{background:var(--pxm-card2);color:var(--pxm-txt);}
+
+.pxm-wv-frame{
+  flex:1;border:none;background:#fff;width:100%;
+}
+.pxm-wv-blocked{
+  position:absolute;inset:47px 0 0 0;background:var(--pxm-bg);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:24px;text-align:center;gap:12px;z-index:5;
+}
+.pxm-wv-blocked h5{font-size:15px;color:var(--pxm-txt);}
+.pxm-wv-blocked p{font-size:12px;color:var(--pxm-mut);line-height:1.6;max-width:340px;}
+.pxm-wv-resize{
+  position:absolute;right:0;bottom:0;width:18px;height:18px;
+  cursor:nwse-resize;
+  background:linear-gradient(135deg,transparent 50%,var(--pxm-line) 50%);
+  z-index:10;
+}
+
+/* ============ LIGHTBOX ============ */
+.pxm-lightbox{
+  position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.92);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:.25s;
+}
+.pxm-lightbox.pxm-open{opacity:1;pointer-events:auto;}
+.pxm-lb-img{
+  max-width:90vw;max-height:85vh;border-radius:12px;
+  box-shadow:0 20px 60px rgba(0,0,0,.8);transform:scale(.92);transition:.3s;
+}
+.pxm-lightbox.pxm-open .pxm-lb-img{transform:scale(1);}
+.pxm-lb-close{
+  position:absolute;top:20px;right:20px;width:44px;height:44px;border-radius:50%;
+  background:rgba(255,255,255,.1);color:#fff;font-size:20px;
+  display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);
+}
+.pxm-lb-close:hover{background:rgba(255,80,80,.5);}
+.pxm-lb-prev, .pxm-lb-next{
+  position:absolute;top:50%;transform:translateY(-50%);
+  width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.1);
+  color:#fff;font-size:28px;display:flex;align-items:center;justify-content:center;
+  backdrop-filter:blur(8px);transition:.2s;
+}
+.pxm-lb-prev{left:20px;}
+.pxm-lb-next{right:20px;}
+.pxm-lb-prev:hover, .pxm-lb-next:hover{background:rgba(108,140,255,.5);transform:translateY(-50%) scale(1.05);}
+.pxm-lb-count{
+  position:absolute;bottom:24px;left:50%;transform:translateX(-50%);
+  padding:6px 14px;border-radius:20px;background:rgba(0,0,0,.6);
+  color:#fff;font-size:12px;backdrop-filter:blur(8px);
+}
+
+/* ============ RESPONSIVE ============ */
+@media(max-width:768px){
+  .pxm-bar{right:6px;padding:7px 5px;gap:4px;border-radius:14px;}
+  .pxm-bar-btn{width:40px;height:40px;font-size:17px;border-radius:10px;}
+  .pxm-panel{right:0;width:82vw;max-width:82vw;border-radius:0;}
+  .pxm-tab{padding:6px 7px 6px 9px;font-size:11px;max-width:110px;}
+  .pxm-wa-chat{right:8px;left:8px;width:auto;max-width:none;bottom:90px;max-height:72vh;}
+  .pxm-wv{
+    right:8px;left:8px;width:auto;max-width:none;
+    bottom:90px;height:64vh;
+  }
+  .pxm-photo-grid{grid-template-columns:repeat(3,1fr);}
+  .pxm-ai-grid{grid-template-columns:repeat(2,1fr);}
+  .pxm-footer-cols{grid-template-columns:1fr 1fr;}
+  .pxm-footer-cols > div:last-child{grid-column:span 2;}
+  .pxm-lb-prev, .pxm-lb-next{width:44px;height:44px;font-size:24px;}
+  .pxm-lb-prev{left:8px;}
+  .pxm-lb-next{right:8px;}
+}
+@media(max-width:480px){
+  .pxm-panel{width:62vw;max-width:62vw;}
+  .pxm-bar-btn{width:36px;height:36px;font-size:15px;}
+}
+</style>
+</head>
+<body>
+
+<section class="pxm-root" id="pxmRoot">
+
+  <!-- ============ RIGHT LAUNCHER ============ -->
+  <aside class="pxm-bar" id="pxmBar">
+    <button class="pxm-bar-btn" data-pxm-open="aihub"     title="AI Hub">🤖</button>
+    <button class="pxm-bar-btn" data-pxm-open="fb"        title="Facebook">📘</button>
+    <button class="pxm-bar-btn" data-pxm-open="whatsapp"  title="WhatsApp">💬</button>
+    <button class="pxm-bar-btn" data-pxm-open="call"      title="Call">📞</button>
+    <button class="pxm-bar-btn" data-pxm-open="messenger" title="Messenger">✉️</button>
+    <button class="pxm-bar-btn" data-pxm-open="addsite"   title="Add Site">➕</button>
+    <button class="pxm-bar-btn" data-pxm-open="code"      title="Code">💻</button>
+    <button class="pxm-bar-btn" data-pxm-open="browser"   title="Browser">🌐</button>
+    <button class="pxm-bar-btn" data-pxm-open="blog"      title="Blog">📷</button>
+    <button class="pxm-bar-btn" data-pxm-open="medium"    title="Footer">📰</button>
+  </aside>
+
+  <!-- ============ MULTI-WINDOW PANEL ============ -->
+  <div class="pxm-panel" id="pxmPanel" aria-hidden="true">
+    <div class="pxm-tabstrip">
+      <div class="pxm-tabs" id="pxmTabs"></div>
+      <button class="pxm-tabstrip-close" id="pxmPanelClose" title="Close all">✕</button>
+    </div>
+    <div class="pxm-body" id="pxmBody">
+
+      <!-- AI Hub -->
+      <div class="pxm-pane" data-pxm-pane="aihub" hidden>
+        <div class="pxm-pane-head"><h4>🤖 AI Hub — Tap to open inside app</h4></div>
+        <div class="pxm-ai-grid" id="pxmAiGrid">
+          <div class="pxm-ai-card" data-pxm-ai="https://chatgpt.com"><img src="https://www.google.com/s2/favicons?sz=64&domain=chatgpt.com"><b>ChatGPT</b><span>OpenAI</span><span class="pxm-launch">Open</span></div>
+          <div class="pxm-ai-card" data-pxm-ai="https://gemini.google.com"><img src="https://www.google.com/s2/favicons?sz=64&domain=gemini.google.com"><b>Gemini</b><span>Google</span><span class="pxm-launch">Open</span></div>
+          <div class="pxm-ai-card" data-pxm-ai="https://claude.ai"><img src="https://www.google.com/s2/favicons?sz=64&domain=claude.ai"><b>Claude</b><span>Anthropic</span><span class="pxm-launch">Open</span></div>
+          <div class="pxm-ai-card" data-pxm-ai="https://chat.deepseek.com"><img src="https://www.google.com/s2/favicons?sz=64&domain=deepseek.com"><b>DeepSeek</b><span>Coding</span><span class="pxm-launch">Open</span></div>
+          <div class="pxm-ai-card" data-pxm-ai="https://lmarena.ai"><img src="https://www.google.com/s2/favicons?sz=64&domain=lmarena.ai"><b>LMArena</b><span>All models</span><span class="pxm-launch">Open</span></div>
+          <div class="pxm-ai-card" data-pxm-ai="https://perplexity.ai"><img src="https://www.google.com/s2/favicons?sz=64&domain=perplexity.ai"><b>Perplexity</b><span>Search</span><span class="pxm-launch">Open</span></div>
+        </div>
+      </div>
+
+      <!-- Facebook -->
+      <div class="pxm-pane" data-pxm-pane="fb" hidden>
+        <div class="pxm-pane-head"><h4>📘 Facebook</h4></div>
+        <p class="pxm-p">আমাদের Facebook পেজে যুক্ত হোন।</p>
+        <a class="pxm-act-link pxm-fb" href="https://facebook.com" target="_blank" rel="noopener">→ Visit Page</a>
+      </div>
+
+      <!-- WhatsApp -->
+      <div class="pxm-pane" data-pxm-pane="whatsapp" hidden>
+        <div class="pxm-pane-head"><h4>💬 WhatsApp</h4></div>
+        <p class="pxm-p">সরাসরি চ্যাট করুন — নিচে floating bot-ও পাবেন।</p>
+        <a class="pxm-act-link pxm-wa" href="https://wa.me/8801700000000" target="_blank" rel="noopener">→ Open WhatsApp</a>
+      </div>
+
+      <!-- Call -->
+      <div class="pxm-pane" data-pxm-pane="call" hidden>
+        <div class="pxm-pane-head"><h4>📞 Call</h4></div>
+        <p class="pxm-p">সরাসরি কল করুন।</p>
+        <a class="pxm-act-link pxm-call" href="tel:+8801700000000">→ +880 1700 000000</a>
+      </div>
+
+      <!-- Messenger -->
+      <div class="pxm-pane" data-pxm-pane="messenger" hidden>
+        <div class="pxm-pane-head"><h4>✉️ Messenger</h4></div>
+        <p class="pxm-p">Messenger-এ চ্যাট করুন।</p>
+        <a class="pxm-act-link pxm-msg" href="https://m.me/yourpage" target="_blank" rel="noopener">→ Open Messenger</a>
+      </div>
+
+      <!-- Add Site -->
+      <div class="pxm-pane" data-pxm-pane="addsite" hidden>
+        <div class="pxm-pane-head"><h4>➕ Add Site</h4></div>
+        <input class="pxm-inp" id="pxmAddName" type="text" placeholder="Site name">
+        <input class="pxm-inp" id="pxmAddUrl" type="url" placeholder="example.com">
+        <button class="pxm-btn pxm-btn-primary" id="pxmAddBtn">+ Save</button>
+        <div class="pxm-saved-list" id="pxmSavedList"></div>
+      </div>
+
+      <!-- Code -->
+      <div class="pxm-pane" data-pxm-pane="code" hidden>
+        <div class="pxm-pane-head"><h4>💻 Offline Code</h4></div>
+        <textarea class="pxm-code" id="pxmCode" spellcheck="false">&lt;h1 style="color:#6c8cff;font-family:sans-serif"&gt;Hello PritomX!&lt;/h1&gt;
+&lt;p style="font-family:sans-serif"&gt;Live preview auto-update&lt;/p&gt;
+&lt;button onclick="alert('OK')"&gt;Click&lt;/button&gt;</textarea>
+        <div class="pxm-row">
+          <button class="pxm-btn pxm-btn-ok" id="pxmRun">▶ Run</button>
+          <button class="pxm-btn pxm-btn-ghost" id="pxmClear">🗑 Clear</button>
+        </div>
+        <iframe class="pxm-frame" id="pxmCodeFrame" sandbox="allow-scripts allow-modals allow-forms"></iframe>
+      </div>
+
+      <!-- Browser (in-panel) -->
+      <div class="pxm-pane" data-pxm-pane="browser" hidden>
+        <div class="pxm-pane-head"><h4>🌐 Browser</h4></div>
+        <input class="pxm-inp" id="pxmUrl" type="text" placeholder="Google search or type URL...">
+        <div class="pxm-row">
+          <button class="pxm-btn pxm-btn-primary" id="pxmGo">Open</button>
+          <button class="pxm-btn pxm-btn-ghost" id="pxmReset">Reset</button>
+          <button class="pxm-btn pxm-btn-ghost" id="pxmPopOut" title="Float window">⧉ Float</button>
+        </div>
+        <iframe class="pxm-frame" id="pxmBrowserFrame" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
+      </div>
+
+      <!-- Blog Photo -->
+      <div class="pxm-pane" data-pxm-pane="blog" hidden>
+        <div class="pxm-pane-head"><h4>📷 Blog Photos</h4></div>
+        <div class="pxm-photo-grid" id="pxmPhotoGrid">
+          <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600" alt="">
+          <img src="https://images.unsplash.com/photo-1511593358241-7eea1f3c84e5?w=600" alt="">
+          <img src="https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=600" alt="">
+          <img src="https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=600" alt="">
+          <img src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=600" alt="">
+          <img src="https://images.unsplash.com/photo-1472214103451-9374bd1c798e?w=600" alt="">
+          <img src="https://images.unsplash.com/photo-1426604966848-d7adac402bff?w=600" alt="">
+          <img src="https://images.unsplash.com/photo-1501594907352-04cda38ebc29?w=600" alt="">
+          <img src="https://images.unsplash.com/photo-1483728642387-6c3bdd6c93e5?w=600" alt="">
+        </div>
+      </div>
+
+      <!-- Medium Footer -->
+      <div class="pxm-pane" data-pxm-pane="medium" hidden>
+        <div class="pxm-pane-head"><h4>📰 Medium Footer</h4></div>
+        <div class="pxm-footer">
+          <div class="pxm-footer-cols">
+            <div><b>Company</b><a href="#">About</a><a href="#">Careers</a><a href="#">Press</a></div>
+            <div><b>Product</b><a href="#">Features</a><a href="#">Pricing</a><a href="#">Docs</a></div>
+            <div><b>Legal</b><a href="#">Terms</a><a href="#">Privacy</a></div>
+          </div>
+          <div class="pxm-footer-bottom">© 2026 PritomX</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============ WHATSAPP FAB ============ -->
+  <button class="pxm-wa-fab" id="pxmWaFab" title="Smart Chat">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 14.4c-.3-.2-1.7-.8-2-.9-.3-.1-.5-.2-.7.2-.2.3-.8.9-1 1.1-.2.2-.3.2-.6.1-1.7-.8-2.8-1.4-3.9-3.2-.3-.5.3-.5.8-1.5.1-.2 0-.4 0-.5-.1-.2-.7-1.6-.9-2.2-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.5s1.1 2.9 1.2 3.1c.2.2 2.1 3.2 5.1 4.5.7.3 1.3.5 1.7.6.7.2 1.4.2 1.9.1.6-.1 1.7-.7 2-1.4.2-.7.2-1.3.2-1.4-.1-.2-.3-.2-.6-.4zM12 2C6.5 2 2 6.5 2 12c0 1.8.5 3.4 1.3 4.9L2 22l5.3-1.3c1.4.8 3 1.2 4.7 1.2 5.5 0 10-4.5 10-10S17.5 2 12 2zm0 18.2c-1.5 0-3-.4-4.2-1.2l-.3-.2-3.1.8.8-3-.2-.3C4.3 15 3.8 13.6 3.8 12c0-4.5 3.7-8.2 8.2-8.2s8.2 3.7 8.2 8.2-3.7 8.2-8.2 8.2z"/></svg>
+    <span class="pxm-wa-dot"></span>
+  </button>
+
+  <!-- ============ WHATSAPP CHAT ============ -->
+  <div class="pxm-wa-chat" id="pxmWaChat" aria-hidden="true">
+    <div class="pxm-wa-head">
+      <div class="pxm-wa-avatar">🤖</div>
+      <div class="pxm-wa-info">
+        <b>PritomX AI Assistant</b>
+        <small><span class="pxm-wa-online"></span> Online • Smart bot</small>
+      </div>
+      <button class="pxm-wa-close" id="pxmWaClose">✕</button>
+    </div>
+    <div class="pxm-wa-body" id="pxmWaBody">
+      <div class="pxm-wa-msg pxm-wa-in">
+        <span>আসসালামু আলাইকুম! 👋 আমি PritomX AI Assistant। যেকোনো বিষয়ে জিজ্ঞাসা করুন — AI, কোড, ফিচার, pricing, সব।</span>
+        <small>এখন</small>
+      </div>
+    </div>
+    <div class="pxm-wa-quick" id="pxmWaQuick">
+      <button data-pxm-quick="AI Hub কেমন ব্যবহার করব?">🤖 AI Hub</button>
+      <button data-pxm-quick="Floating browser কীভাবে চালাব?">🌐 Browser</button>
+      <button data-pxm-quick="কোড প্রিভিউ কীভাবে?">💻 Code</button>
+      <button data-pxm-quick="একজন মানুষের সাথে কথা বলতে চাই">🙋 Human</button>
+    </div>
+    <form class="pxm-wa-input" id="pxmWaForm">
+      <input id="pxmWaInput" placeholder="Type a message..." autocomplete="off">
+      <button type="submit" title="Send">➤</button>
+    </form>
+  </div>
+
+  <!-- ============ UNIVERSAL WEBVIEW (Multi-tab browser) ============ -->
+  <div class="pxm-wv" id="pxmWv" aria-hidden="true">
+    <div class="pxm-wv-tabs" id="pxmWvTabs">
+      <button class="pxm-wv-newtab" id="pxmWvNewtab" title="New tab">+</button>
+    </div>
+    <div class="pxm-wv-bar" id="pxmWvBar">
+      <div class="pxm-wv-dots">
+        <span data-pxm-wvclose title="Close"></span>
+        <span data-pxm-wvmin title="Minimize"></span>
+        <span data-pxm-wvmax title="Maximize"></span>
+      </div>
+      <select class="pxm-wv-engine" id="pxmWvEngine">
+        <option value="google">Google</option>
+        <option value="ddg">DDG</option>
+        <option value="bing">Bing</option>
+        <option value="direct">URL</option>
+      </select>
+      <input class="pxm-wv-url" id="pxmWvUrl" placeholder="Search or URL...">
+      <button class="pxm-wv-btn" id="pxmWvGo" title="Go">▶</button>
+      <button class="pxm-wv-btn" id="pxmWvReload" title="Reload">⟳</button>
+      <button class="pxm-wv-btn" id="pxmWvExternal" title="Open in new window">↗</button>
+    </div>
+    <iframe class="pxm-wv-frame" id="pxmWvFrame" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"></iframe>
+    <div class="pxm-wv-blocked" id="pxmWvBlocked" hidden>
+      <h5>⚠️ এই সাইটটি iframe-এ লোড হতে দিচ্ছে না</h5>
+      <p>ব্রাউজার সিকিউরিটি (X-Frame-Options) এর কারণে Google, YouTube, Twitter ইত্যাদি সাইট সরাসরি iframe-এ দেখানো যায় না।</p>
+      <div class="pxm-row" style="justify-content:center">
+        <button class="pxm-btn pxm-btn-primary" id="pxmWvOpenExt">↗ External Open</button>
+        <button class="pxm-btn pxm-btn-ghost" id="pxmWvTryDdg">Try DuckDuckGo</button>
+      </div>
+    </div>
+    <div class="pxm-wv-resize" id="pxmWvResize"></div>
+  </div>
+
+  <!-- ============ LIGHTBOX ============ -->
+  <div class="pxm-lightbox" id="pxmLightbox" aria-hidden="true">
+    <button class="pxm-lb-close" id="pxmLbClose">✕</button>
+    <button class="pxm-lb-prev" id="pxmLbPrev">‹</button>
+    <button class="pxm-lb-next" id="pxmLbNext">›</button>
+    <img class="pxm-lb-img" id="pxmLbImg" src="" alt="">
+    <div class="pxm-lb-count" id="pxmLbCount"></div>
+  </div>
+
+</section>
+
+<script>
+/* ============================================================
+   ISOLATED IIFE
+============================================================ */
+(function(){
+'use strict';
+const root = document.getElementById('pxmRoot');
+if(!root) return;
+const $  = s => root.querySelector(s);
+const $$ = s => root.querySelectorAll(s);
+
+/* ============================================================
+   1. SMART AI BOT — 20+ intents, multilingual, context-aware
+============================================================ */
+const PXMBot = (function(){
+  const ctx = { lastIntent:null, lastTopic:null, turn:0, userName:null };
+
+  // Normalize input
+  function norm(s){
+    return String(s||'').toLowerCase()
+      .replace(/[!?।,.:;"'`~]/g,' ')
+      .replace(/\s+/g,' ').trim();
+  }
+
+  // Intent rules — ordered, first match wins
+  const INTENTS = [
+    { id:'greet',       re:/\b(hi|hello|hey|assalam|salam|হ্যালো|হাই|সালাম|আসসালামু|নমস্কার)\b/i,
+      replies:[
+        'আসসালামু আলাইকুম! 👋 PritomX AI Assistant-এ স্বাগতম। কীভাবে সাহায্য করতে পারি?',
+        'হ্যালো! 😊 আজ আপনাকে কী নিয়ে সাহায্য করব?',
+        'হ্যালো! PritomX-এর সব ফিচার সম্পর্কে জিজ্ঞাসা করতে পারেন।'
+      ],
+      chips:['AI Hub কী?','Floating browser','কোড এডিটর','Pricing']
+    },
+    { id:'bye',         re:/\b(bye|goodbye|বিদায়|আল্লাহ হাফেজ|allah hafez|খোদা হাফেজ)\b/i,
+      replies:[
+        'আল্লাহ হাফেজ! 🙋 আবার আসবেন।',
+        'বিদায়! ভালো থাকুন। 👍',
+        'ধন্যবাদ! আবার কথা হবে।'
+      ], chips:['ধন্যবাদ']
+    },
+    { id:'thanks',      re:/\b(thanks|thank you|ধন্যবাদ|শুকরিয়া|shukriya)\b/i,
+      replies:[
+        'আপনাকেও ধন্যবাদ! 🙏 আরো কিছু জানতে চাইলে বলুন।',
+        'খুশি হলাম সাহায্য করতে পেরে! 😊',
+        'স্বাগতম! অন্য কোনো প্রশ্ন থাকলে বলুন।'
+      ], chips:['AI Hub কী?','Browser','Code']
+    },
+    { id:'howareyou',   re:/\b(kemon acho|how are you|কেমন আছেন|কেমন আছো|kaise ho)\b/i,
+      replies:[
+        'আলহামদুলিল্লাহ, ভালো আছি! 😊 আপনি কেমন আছেন?',
+        'ভালো আছি, ধন্যবাদ! আপনি বলুন — কীভাবে সাহায্য করব?'
+      ], chips:['ভালো আছি','AI সম্পর্কে বলুন']
+    },
+    { id:'price',       re:/\b(price|pricing|cost|দাম|মূল্য|koto|কত টাকা|charge|fee|subscription|প্ল্যান)\b/i,
+      replies:[
+        '💰 PritomX AI Hub-এর মূল সংস্করণ **সম্পূর্ণ ফ্রি**। সব ফিচার — AI Hub, Browser, Code Editor, Notes, History — কোনো লুকানো চার্জ নেই।',
+        'Pricing সম্পর্কে: সম্পূর্ণ ফ্রি। ভবিষ্যতে premium plan আসতে পারে। এখন সব unlocked।'
+      ],
+      chips:['Free কেন?','Premium আছে?','একজন মানুষের সাথে কথা']
+    },
+    { id:'ai',          re:/\b(ai|artificial|এআই|কৃত্রিম|chatgpt|gpt|gemini|claude|deepseek|lmarena|grok|perplexity|mistral|qwen)\b/i,
+      replies:[
+        '🤖 আমাদের AI Hub-এ ৬+ popular AI — ChatGPT, Gemini, Claude, DeepSeek, LMArena, Perplexity। ডান দিকের 🤖 আইকনে ক্লিক করে যেকোনোটা open করুন।',
+        'AI Hub-এ যেকোনো AI এক ক্লিকে পাবেন। এছাড়াও প্রতিটি AI কার্ডে ক্লিক করলে floating window-এ খোলে — পেজ থেকে বের হতে হয় না।',
+        'ChatGPT, Gemini, Claude, DeepSeek সহ ৮০+ AI টুল যোগ করা আছে। সব লিংক verified।'
+      ],
+      chips:['ChatGPT কী?','LMArena কী?','Browser দিয়ে AI চালাবো?']
+    },
+    { id:'chatgpt',     re:/\b(chatgpt|gpt|openai)\b/i,
+      replies:[
+        'ChatGPT হলো OpenAI-এর conversational AI। আমাদের Hub-এ ChatGPT কার্ডে ক্লিক করলেই সরাসরি চলে যাবে। 💬',
+      ], chips:['Gemini কী?','Claude কী?','সব AI দেখাও']
+    },
+    { id:'gemini',      re:/\b(gemini|google ai|bard)\b/i,
+      replies:['Gemini হলো Google-এর advanced AI — multimodal (text, image, video), দ্রুত এবং ফ্রি। 🚀'],
+      chips:['ChatGPT কী?','Claude কী?']
+    },
+    { id:'claude',      re:/\b(claude|anthropic)\b/i,
+      replies:['Claude হলো Anthropic-এর AI — দীর্ঘ কোড, রিসার্চ, এবং reasoning-এ অসাধারণ। 📚'],
+      chips:['DeepSeek কী?','কোড এডিটর দেখাও']
+    },
+    { id:'code',        re:/\b(code|html|css|js|coding|কোড|editor|editor|প্রোগ্রাম|html runner|live preview)\b/i,
+      replies:[
+        '💻 Code Tab-এ HTML/CSS/JS লিখুন → সাথে সাথে Live Preview দেখুন। সম্পূর্ণ offline কাজ করে। ▶ Run ও ✎ Edit বাটন Editor-এর উপরে।',
+        'Code Runner-এ Blank / Form / Game template দেওয়া আছে — এক ক্লিকে শুরু। History-ও save হয়।'
+      ],
+      chips:['Code Offline চলে?','Snapshot কী?','Full Editor']
+    },
+    { id:'browser',     re:/\b(browser|webview|floating window|widget|ব্রাউজার|গুগল|google|search|সার্চ)\b/i,
+      replies:[
+        '🌐 Floating Browser Widget-এ multi-tab আছে। Google, DDG, Bing — তিনটাই search engine হিসেবে ব্যবহার করা যায়। ⧉ Float বাটনে ক্লিক করলে আলাদা floating window খোলে।',
+        'Widget-এ 🔍 URL bar-এ লিখে Enter চাপুন। Drag করে সরাতে পারবেন, resize corner টেনে ছোট-বড় করা যায়।'
+      ],
+      chips:['Google কাজ করে?','External Open','Multi-tab কীভাবে?']
+    },
+    { id:'google',      re:/\b(google|গুগল|gmail|youtube|facebook|twitter|instagram)\b/i,
+      replies:[
+        '⚠️ Google/Twitter/YouTube-এর মতো সাইট ব্রাউজার iframe-এ ব্লক করে (X-Frame-Options)। তবে আমরা `igu=1` ট্রিক ব্যবহার করি — কিছু ক্ষেত্রে Google search কাজ করে। না হলে ↗ External Open বাটন দেওয়া আছে।',
+        'Google search চেষ্টা করুন — আমাদের widget Google-এর `igu=1` embed URL ব্যবহার করে। কাজ না করলে DuckDuckGo বা Bing try করুন।'
+      ],
+      chips:['DuckDuckGo try','External Open','Widget দেখাও']
+    },
+    { id:'notes',       re:/\b(note|নোট|লিখ|write|save note|diary)\b/i,
+      replies:['📝 Notes Tab-এ auto-save সহ নোট লিখতে পারেন। Text Select করে Note/Highlight बनাতে পারেন। সব offline সংরক্ষিত।'],
+      chips:['Favorite file কী?','Note edit করব?']
+    },
+    { id:'history',     re:/\b(history|hist|হিস্টরি|পুরাতন|previous|snapshot)\b/i,
+      replies:['🕓 History Tab-এ Code-এর সব snapshot + সব note দেখা যায়। ১০০ snapshot পর্যন্ত save থাকে। Search দিয়ে খুঁজুন।'],
+      chips:['Snapshot কীভাবে?','Code history দেখাও']
+    },
+    { id:'fav',         re:/\b(fav|favorite|ফেভারিট|bookmark|save kore rakha)\b/i,
+      replies:['⭐ ★ আইকনে ক্লিক করে favorite করুন। Favorite Files আলাদা store-এ থাকে — Main delete করলেও মুছবে না।'],
+      chips:['Favorite delete হবে?','সব Favorite দেখাও']
+    },
+    { id:'lightbox',    re:/\b(photo|image|gallery|ছবি|গ্যালারি|lightbox|blog photo)\b/i,
+      replies:['📷 Blog Photo-তে ক্লিক → Fullscreen Lightbox। ← → arrow, ESC close, মোবাইলে swipe। Counter দেখায়।'],
+      chips:['Blog Photo দেখাও','ছবি বড় করব']
+    },
+    { id:'whatsapp',    re:/\b(whatsapp|wa\.me|হোয়াটসঅ্যাপ)\b/i,
+      replies:['💬 WhatsApp এখানেই আছে — এই chat-টা! Auto-reply Smart Bot। এছাড়া সরাসরি wa.me link-ও আছে।'],
+      chips:['Human support','নাম্বার দাও']
+    },
+    { id:'human',       re:/\b(human|manus|agent|support|sahajjo|সাহায্য|মানুষ|talk to someone|contact)\b/i,
+      replies:[
+        '🙋 মানব সাপোর্টের জন্য: WhatsApp (wa.me/8801700000000), Messenger (m.me/yourpage) বা Call (+880 1700 000000)।',
+        'সরাসরি কথা বলতে WhatsApp বা Call button ব্যবহার করুন — আমাদের টিম ২৪/৭ আছে।'
+      ],
+      chips:['WhatsApp number','Call number','Messenger link']
+    },
+    { id:'help',        re:/\b(help|সাহায্য|problem|সমস্যা|issue|kaj korche na|কাজ করছে না|broken|error)\b/i,
+      replies:[
+        '🆘 কী সমস্যা হচ্ছে বলুন — আমি সাহায্য করব। AI, Code, Browser, Notes — সব বিষয়ে জিজ্ঞাসা করুন।',
+        'বলুন কী সমস্যা। উদাহরণ: "Browser blank দেখাচ্ছে", "Code save হচ্ছে না", "Login হচ্ছে না"।'
+      ],
+      chips:['Browser blank','Login issue','Code save না']
+    },
+    { id:'browserblock',re:/\b(blank|blocked|লোড হচ্ছে না|load হচ্ছে না|blank page|সাদা পেজ)\b/i,
+      replies:[
+        '⚠️ Blank page মানে সাইট iframe-embedding ব্লক করেছে (Google, Twitter, Facebook)। সমাধান: ↗ External Open চেপে নতুন ট্যাবে খুলুন। অথবা DuckDuckGo / Bing try করুন।'
+      ],
+      chips:['External Open','DuckDuckGo চালাও']
+    },
+    { id:'login',       re:/\b(login|sign in|সাইন ইন|লগইন|password|পাসওয়ার্ড|account)\b/i,
+      replies:[
+        '🔐 AI সাইটে login করতে: কার্ডে ক্লিক → floating window খোলে → ↗ External Open → নতুন ট্যাবে login করুন। কিছু সাইট iframe-এ login করতে দেয় না (security) — external best।'
+      ],
+      chips:['External Open','কোন AI login ছাড়া চলে?']
+    },
+    { id:'about',       re:/\b(about|who are you|তুমি কে|আপনি কে|নাম কী|pritom|কি করো)\b/i,
+      replies:[
+        'আমি PritomX AI Assistant 🤖 — একটি local smart bot। PritomX AI HUB-এর সব ফিচার সম্পর্কে জানি। আপনার প্রশ্নের উত্তর দিতে পারি — offline, কোনো API লাগে না।',
+        'আমার নাম PritomX AI Assistant। এটি একটি offline smart bot — AI, Code, Browser, Notes সহ সব ফিচারে সাহায্য করতে পারি।'
+      ],
+      chips:['তোমার ফিচার','AI Hub','Browser']
+    },
+    { id:'feature',     re:/\b(feature|ফিচার|ki ki ache|কি কি আছে|capabilities|কি করতে পারো)\b/i,
+      replies:[
+        '🎯 PritomX AI HUB-এর ফিচার:\n\n🤖 AI Hub (৬+ AI)\n💬 Smart WhatsApp Bot\n🌐 Multi-Tab Floating Browser\n💻 Offline Code Runner\n📝 Notes + Highlight\n🕓 Full History\n⭐ Favorite Files\n📷 Photo Lightbox\n📰 News + Footer\n\nসব popup-এ — কোনো পেজ reload নেই।'
+      ],
+      chips:['Browser কীভাবে?','Code কীভাবে?','Offline চলে?']
+    },
+    { id:'offline',     re:/\b(offline|ইন্টারনেট|net|নেট|no internet|offline kaj)\b/i,
+      replies:['✅ Notes, Code Runner, History, Favorites, Smart Bot — সব **100% offline**। শুধু AI সাইট ও Browser-এ internet লাগবে।'],
+      chips:['Code offline চলে?','Note offline?']
+    },
+    { id:'tq',          re:/\b(ok|okay|ঠিক আছে|accha|আচ্ছা|hmm|বুঝেছি|আচ্ছা)\b/i,
+      replies:[
+        '👍 আচ্ছা। আরো কিছু জানতে চাইলে বলুন।',
+        'বুঝেছি। আর কোনো প্রশ্ন?'
+      ], chips:['AI','Browser','Code']
+    }
+  ];
+
+  function pick(arr){ return arr[Math.floor(Math.random() * arr.length)]; }
+
+  function findIntent(text){
+    const n = norm(text);
+    if(!n) return null;
+    for(const it of INTENTS){
+      if(it.re.test(n)) return it;
+    }
+    return null;
+  }
+
+  function respond(input){
+    ctx.turn++;
+    const it = findIntent(input);
+    if(it){
+      ctx.lastIntent = it.id;
+      return {
+        text: pick(it.replies),
+        chips: it.chips || ['AI Hub','Browser','Code'],
+        intent: it.id
+      };
+    }
+    // Smart fallback — recognize keywords
+    const n = norm(input);
+    if(/\?|কি|কী|কেন|কেমন|কিভাবে/.test(n)){
+      return {
+        text: 'আপনার প্রশ্নটা আরেকটু পরিষ্কার করে বলবেন? উদাহরণ: "AI Hub কী?", "Browser কীভাবে চালাব?", "Code offline চলে?"',
+        chips:['AI Hub','Browser','Code','Pricing'],
+        intent:'clarify'
+      };
+    }
+    if(ctx.lastIntent){
+      return {
+        text: `"${input.slice(0,50)}" — এই বিষয়ে আমার নিশ্চিত তথ্য নেই 😅 সাপোর্ট টিমের সাথে সরাসরি কথা বলতে WhatsApp বা Call ব্যবহার করুন।`,
+        chips:['WhatsApp','Call','Human Support'],
+        intent:'unsure'
+      };
+    }
+    return {
+      text: `বুঝলাম "${input.slice(0,50)}" 😊 তবে আরেকটু বিস্তারিত বললে ভালো সাহায্য করতে পারব। অথবা নিচের সুপারিশ থেকে বেছে নিন 👇`,
+      chips:['AI Hub','Browser','Code','Pricing','Human'],
+      intent:'unknown'
+    };
+  }
+
+  return { respond, reset:()=>{ctx.lastIntent=null;ctx.turn=0;} };
+})();
+
+/* ============================================================
+   2. WHATSAPP CHAT with Smart Bot
+============================================================ */
+const waFab   = $('#pxmWaFab');
+const waChat  = $('#pxmWaChat');
+const waClose = $('#pxmWaClose');
+const waBody  = $('#pxmWaBody');
+const waForm  = $('#pxmWaForm');
+const waInput = $('#pxmWaInput');
+const waQuick = $('#pxmWaQuick');
+
+function openWaChat(){
+  waChat.classList.add('pxm-open');
+  waChat.setAttribute('aria-hidden','false');
+  setTimeout(()=>waInput?.focus(), 250);
+}
+function closeWaChat(){
+  waChat.classList.remove('pxm-open');
+  waChat.setAttribute('aria-hidden','true');
+}
+waFab.addEventListener('click', ()=>{
+  if(waChat.classList.contains('pxm-open')) closeWaChat();
+  else openWaChat();
+});
+waClose.addEventListener('click', closeWaChat);
+
+function nowTime(){
+  const d = new Date();
+  return d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');
+}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+function addWaMsg(text, dir){
+  const el = document.createElement('div');
+  el.className = 'pxm-wa-msg ' + (dir==='out'?'pxm-wa-out':'pxm-wa-in');
+  el.innerHTML = `<span>${esc(text).replace(/\n/g,'<br>').replace(/\*\*(.+?)\*\*/g,'<b>$1</b>')}</span><small>${nowTime()}</small>`;
+  waBody.appendChild(el);
+  waBody.scrollTop = waBody.scrollHeight;
+}
+function showTyping(){
+  const el = document.createElement('div');
+  el.className = 'pxm-wa-typing';
+  el.id = 'pxmTyping';
+  el.innerHTML = '<span></span><span></span><span></span>';
+  waBody.appendChild(el);
+  waBody.scrollTop = waBody.scrollHeight;
+}
+function hideTyping(){
+  const el = document.getElementById('pxmTyping');
+  if(el) el.remove();
+}
+function renderChips(chips){
+  if(!chips || !chips.length) return;
+  waQuick.innerHTML = chips.map(c =>
+    `<button data-pxm-quick="${esc(c)}">${esc(c)}</button>`
+  ).join('');
+  waQuick.querySelectorAll('[data-pxm-quick]').forEach(b=>{
+    b.addEventListener('click', ()=>handleQuick(b.dataset.pxmQuick));
+  });
+}
+
+function botRespond(userText){
+  showTyping();
+  const think = 400 + Math.min(1400, userText.length * 25);
+  setTimeout(()=>{
+    hideTyping();
+    const res = PXMBot.respond(userText);
+    addWaMsg(res.text, 'in');
+    renderChips(res.chips);
+  }, think);
+}
+function handleQuick(text){
+  addWaMsg(text, 'out');
+  botRespond(text);
+}
+waForm.addEventListener('submit', e=>{
+  e.preventDefault();
+  const v = waInput.value.trim();
+  if(!v) return;
+  addWaMsg(v, 'out');
+  waInput.value = '';
+  botRespond(v);
+});
+// wire default chips
+waQuick.querySelectorAll('[data-pxm-quick]').forEach(b=>{
+  b.addEventListener('click', ()=>handleQuick(b.dataset.pxmQuick));
+});
+
+/* ============================================================
+   3. MULTI-WINDOW PANEL (main panel — kept from v1)
+============================================================ */
+const panel = $('#pxmPanel');
+const tabsBar = $('#pxmTabs');
+const closeAll = $('#pxmPanelClose');
+const allPanes = $$('.pxm-pane');
+const launcherBtns = $$('[data-pxm-open]');
+
+const TITLES = {
+  aihub:'🤖 AI Hub', fb:'📘 Facebook', whatsapp:'💬 WhatsApp',
+  call:'📞 Call', messenger:'✉️ Messenger', addsite:'➕ Add Site',
+  code:'💻 Code', browser:'🌐 Browser', blog:'📷 Blog', medium:'📰 Footer'
+};
+let openTabs = [], activeTab = null;
+
+function renderTabs(){
+  tabsBar.innerHTML = openTabs.map(id=>{
+    const a = id===activeTab?'pxm-tab-active':'';
+    return `<div class="pxm-tab ${a}" data-pxm-tab="${id}">
+      <span class="pxm-tab-label">${TITLES[id]||id}</span>
+      <span class="pxm-tab-close" data-pxm-closetab="${id}">✕</span>
+    </div>`;
+  }).join('');
+}
+function showPane(id){ allPanes.forEach(p=>p.hidden = p.dataset.pxmPane !== id); }
+function setActiveTab(id){
+  if(!openTabs.includes(id)) openTabs.push(id);
+  activeTab = id; showPane(id); renderTabs(); updateLauncherActive();
+  setTimeout(()=>{
+    if(id==='code')    $('#pxmCode')?.focus();
+    if(id==='browser') $('#pxmUrl')?.focus();
+    if(id==='addsite') $('#pxmAddName')?.focus();
+  }, 250);
+}
+function closeTab(id){
+  openTabs = openTabs.filter(x=>x!==id);
+  if(activeTab===id){
+    if(openTabs.length) setActiveTab(openTabs[openTabs.length-1]);
+    else closePanel();
+  } else renderTabs();
+}
+function openPanel(){ panel.classList.add('pxm-open'); panel.setAttribute('aria-hidden','false'); }
+function closePanel(){ panel.classList.remove('pxm-open'); panel.setAttribute('aria-hidden','true'); openTabs=[]; activeTab=null; renderTabs(); updateLauncherActive(); }
+function updateLauncherActive(){
+  launcherBtns.forEach(b=>b.classList.toggle('pxm-active', b.dataset.pxmOpen===activeTab));
+}
+launcherBtns.forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const id = btn.dataset.pxmOpen;
+    if(activeTab===id && panel.classList.contains('pxm-open')) closePanel();
+    else { openPanel(); setActiveTab(id); }
+  });
+});
+tabsBar.addEventListener('click', e=>{
+  const c = e.target.closest('[data-pxm-closetab]');
+  if(c){ e.stopPropagation(); closeTab(c.dataset.pxmClosetab); return; }
+  const t = e.target.closest('[data-pxm-tab]');
+  if(t) setActiveTab(t.dataset.pxmTab);
+});
+closeAll.addEventListener('click', closePanel);
+
+/* ============================================================
+   4. AI HUB → open in webview
+============================================================ */
+$('#pxmAiGrid')?.addEventListener('click', e=>{
+  const card = e.target.closest('[data-pxm-ai]');
+  if(!card) return;
+  const url = card.dataset.pxmAi;
+  closePanel();
+  openWebView(url);
+});
+
+/* ============================================================
+   5. ADD SITE
+============================================================ */
+const KEY_SITES = 'pxm.mysites.v2';
+let mySites = (()=>{ try{return JSON.parse(localStorage.getItem(KEY_SITES)||'[]');}catch(e){return [];} })();
+const savedList = $('#pxmSavedList');
+const addName = $('#pxmAddName');
+const addUrl  = $('#pxmAddUrl');
+const addBtn  = $('#pxmAddBtn');
+function renderSites(){
+  if(!savedList) return;
+  if(!mySites.length){ savedList.innerHTML = '<p class="pxm-p" style="text-align:center">No saved sites yet</p>'; return; }
+  savedList.innerHTML = mySites.map((s,i)=>`
+    <div class="pxm-saved-item">
+      <img src="https://www.google.com/s2/favicons?sz=64&domain=${s.url}" alt="">
+      <span title="${s.url}">${s.name}</span>
+      <button data-pxm-open="${i}" title="Open in widget">▶</button>
+      <button data-pxm-ext="${i}" title="External">↗</button>
+      <button data-pxm-del="${i}" title="Delete">✕</button>
+    </div>`).join('');
+}
+addBtn?.addEventListener('click', ()=>{
+  const n = addName.value.trim();
+  let u = addUrl.value.trim();
+  if(!n || !u){ alert('Name + URL দিন'); return; }
+  u = u.replace(/^https?:\/\//,'');
+  mySites.unshift({name:n, url:u});
+  if(mySites.length>50) mySites = mySites.slice(0,50);
+  try{ localStorage.setItem(KEY_SITES, JSON.stringify(mySites)); }catch(e){}
+  addName.value = ''; addUrl.value = ''; renderSites();
+});
+savedList?.addEventListener('click', e=>{
+  const d = e.target.closest('[data-pxm-del]');
+  const o = e.target.closest('[data-pxm-open]');
+  const x = e.target.closest('[data-pxm-ext]');
+  if(d){
+    mySites.splice(+d.dataset.pxmDel,1);
+    try{localStorage.setItem(KEY_SITES,JSON.stringify(mySites));}catch(e){}
+    renderSites();
+  }
+  if(o){
+    const s = mySites[+o.dataset.pxmOpen];
+    closePanel(); openWebView('https://'+s.url);
+  }
+  if(x){
+    const s = mySites[+x.dataset.pxmExt];
+    window.open('https://'+s.url,'_blank','noopener');
+  }
+});
+renderSites();
+
+/* ============================================================
+   6. CODE PREVIEW
+============================================================ */
+const KEY_CODE = 'pxm.code.v2';
+const codeBox = $('#pxmCode');
+const codeFrame = $('#pxmCodeFrame');
+const runBtn = $('#pxmRun');
+const clearBtn = $('#pxmClear');
+if(codeBox && codeFrame){
+  const s = localStorage.getItem(KEY_CODE);
+  if(s) codeBox.value = s;
+  codeFrame.srcdoc = codeBox.value;
+  let t;
+  codeBox.addEventListener('input', ()=>{
+    clearTimeout(t);
+    t = setTimeout(()=>{
+      codeFrame.srcdoc = codeBox.value;
+      try{ localStorage.setItem(KEY_CODE, codeBox.value); }catch(e){}
+    }, 600);
+  });
+  runBtn?.addEventListener('click', ()=>{
+    codeFrame.srcdoc = codeBox.value;
+    try{ localStorage.setItem(KEY_CODE, codeBox.value); }catch(e){}
+  });
+  clearBtn?.addEventListener('click', ()=>{
+    if(!confirm('Clear code?')) return;
+    codeBox.value = ''; codeFrame.srcdoc = ''; localStorage.removeItem(KEY_CODE);
+  });
+}
+
+/* ============================================================
+   7. UNIVERSAL WEBVIEW (multi-tab browser widget)
+============================================================ */
+const wv = $('#pxmWv');
+const wvTabs = $('#pxmWvTabs');
+const wvBar = $('#pxmWvBar');
+const wvUrl = $('#pxmWvUrl');
+const wvFrame = $('#pxmWvFrame');
+const wvEngine = $('#pxmWvEngine');
+const wvGo = $('#pxmWvGo');
+const wvReload = $('#pxmWvReload');
+const wvExternal = $('#pxmWvExternal');
+const wvNewtab = $('#pxmWvNewtab');
+const wvClose = $('[data-pxm-wvclose]');
+const wvMin = $('[data-pxm-wvmin]');
+const wvMax = $('[data-pxm-wvmax]');
+const wvResize = $('#pxmWvResize');
+const wvBlocked = $('#pxmWvBlocked');
+const wvOpenExt = $('#pxmWvOpenExt');
+const wvTryDdg = $('#pxmWvTryDdg');
+const wvEngineSelect = $('#pxmWvEngine');
+
+const wvTabsState = [];  // [{id, url, title, favicon}]
+let wvActiveId = null;
+let wvMaximized = false;
+
+function makeTabId(){ return 'wv_'+Date.now()+'_'+Math.random().toString(36).slice(2,6); }
+
+function renderWvTabs(){
+  wvTabs.querySelectorAll('.pxm-wv-tab').forEach(t=>t.remove());
+  const frag = document.createDocumentFragment();
+  wvTabsState.forEach(t=>{
+    const el = document.createElement('div');
+    el.className = 'pxm-wv-tab' + (t.id===wvActiveId?' pxm-active':'');
+    el.dataset.pxmWvTab = t.id;
+    const host = safeHost(t.url);
+    el.innerHTML = `
+      ${host?`<img class="pxm-wv-fav" src="https://www.google.com/s2/favicons?sz=64&domain=${host}" alt="">`:'<span style="width:14px;height:14px;border-radius:3px;background:#fff"></span>'}
+      <span class="pxm-wv-tlabel">${esc(t.title || host || 'New Tab')}</span>
+      <span class="pxm-wv-tx" data-pxm-wvclosetab="${t.id}">✕</span>`;
+    frag.appendChild(el);
+  });
+  wvTabs.insertBefore(frag, wvNewtab);
+}
+function safeHost(u){
+  try{ return new URL(u.startsWith('http')?u:'https://'+u).hostname; }catch(e){ return ''; }
+}
+function activeWvTab(){ return wvTabsState.find(t=>t.id===wvActiveId); }
+
+function setWvActive(id){
+  wvActiveId = id;
+  const t = activeWvTab();
+  if(!t) return;
+  wvUrl.value = t.url || '';
+  if(t.url) loadWvUrl(t.url, false);
+  else { wvFrame.srcdoc = ''; wvBlocked.hidden = true; }
+  renderWvTabs();
+}
+
+function loadWvUrl(url, remember = true){
+  const full = url.startsWith('http') ? url : 'https://'+url;
+  const t = activeWvTab();
+  if(t){ t.url = full; if(!t.title || t.title==='New Tab') t.title = safeHost(full)||'Tab'; }
+  wvBlocked.hidden = true;
+  wvFrame.style.visibility = 'visible';
+  try{ wvFrame.src = full; }catch(e){ wvFrame.srcdoc = ''; }
+  if(remember){
+    const host = safeHost(full)||'';
+    wvTabsState.forEach(t2=>{ if(t2.id===wvActiveId) t2.favicon=host; });
+    renderWvTabs();
+  }
+  // Detect likely block after timeout
+  setTimeout(()=>{
+    if(activeWvTab()?.url !== full) return;
+    // We can't reliably detect; show option if user clicks external
+  }, 1800);
+}
+
+function computeSearchUrl(q){
+  const engine = wvEngineSelect.value;
+  if(engine === 'direct'){
+    return q.startsWith('http') ? q : 'https://'+q;
+  }
+  if(/^https?:\/\//.test(q) || /^[\w-]+\.[a-z]{2,}/i.test(q)){
+    return q.startsWith('http') ? q : 'https://'+q;
+  }
+  const enc = encodeURIComponent(q);
+  if(engine === 'google') return 'https://www.google.com/search?igu=1&q=' + enc;
+  if(engine === 'bing')   return 'https://www.bing.com/search?q=' + enc;
+  return 'https://lite.duckduckgo.com/lite/?q=' + enc;
+}
+
+function openWebView(initialUrl){
+  if(!wvTabsState.length){
+    newWvTab('');
+  }
+  if(initialUrl){
+    // Reuse an empty tab if any
+    const empty = wvTabsState.find(t=>!t.url);
+    if(empty){
+      wvActiveId = empty.id;
+      wvUrl.value = initialUrl;
+      loadWvUrl(initialUrl);
+    } else {
+      newWvTab(initialUrl);
+    }
+  }
+  wv.classList.add('pxm-open');
+  wv.setAttribute('aria-hidden','false');
+  renderWvTabs();
+}
+function closeWebView(){
+  wv.classList.remove('pxm-open');
+  wv.setAttribute('aria-hidden','true');
+}
+function newWvTab(url){
+  const id = makeTabId();
+  wvTabsState.push({ id, url:url||'', title:'New Tab', favicon:'' });
+  wvActiveId = id;
+  wvUrl.value = url||'';
+  wvBlocked.hidden = true;
+  if(url) loadWvUrl(url, true);
+  else { wvFrame.srcdoc = '<html style="background:#0b0e13;color:#8b94a7;font-family:system-ui;display:flex;align-items:center;justify-content:center;height:100%"><div style="text-align:center"><div style="font-size:42px">🌐</div><p style="margin-top:8px">Type a URL or search above</p></div></html>'; }
+  renderWvTabs();
+}
+function closeWvTab(id){
+  const i = wvTabsState.findIndex(t=>t.id===id);
+  if(i<0) return;
+  wvTabsState.splice(i,1);
+  if(wvActiveId === id){
+    if(wvTabsState.length){
+      setWvActive(wvTabsState[Math.min(i, wvTabsState.length-1)].id);
+    } else {
+      closeWebView();
+      wvActiveId = null;
+      wvTabsState.length = 0;
+      renderWvTabs();
+    }
+  } else renderWvTabs();
+}
+
+wvNewtab.addEventListener('click', ()=>{ newWvTab(''); setTimeout(()=>wvUrl.focus(), 100); });
+wvTabs.addEventListener('click', e=>{
+  const c = e.target.closest('[data-pxm-wvclosetab]');
+  if(c){ e.stopPropagation(); closeWvTab(c.dataset.pxmWvclosetab); return; }
+  const t = e.target.closest('[data-pxm-wvtab]');
+  if(t) setWvActive(t.dataset.pxmWvTab);
+});
+wvGo.addEventListener('click', ()=>{
+  const v = wvUrl.value.trim();
+  if(!v) return;
+  loadWvUrl(computeSearchUrl(v));
+});
+wvUrl.addEventListener('keydown', e=>{
+  if(e.key === 'Enter'){
+    e.preventDefault();
+    const v = wvUrl.value.trim();
+    if(!v) return;
+    loadWvUrl(computeSearchUrl(v));
+  }
+});
+wvReload.addEventListener('click', ()=>{ try{ wvFrame.src = wvFrame.src; }catch(e){} });
+wvExternal.addEventListener('click', ()=>{
+  const v = activeWvTab()?.url || wvUrl.value;
+  if(v) window.open(v, '_blank', 'noopener');
+});
+wvClose.addEventListener('click', closeWebView);
+wvMin.addEventListener('click', ()=>{
+  closeWebView();
+});
+wvMax.addEventListener('click', ()=>{
+  wvMaximized = !wvMaximized;
+  if(wvMaximized){
+    wv.style.width = '95vw';
+    wv.style.height = '88vh';
+    wv.style.right = '2.5vw';
+    wv.style.bottom = '6vh';
+    wv.style.left = 'auto';
+    wv.style.top = 'auto';
+  } else {
+    wv.style.width = '';
+    wv.style.height = '';
+    wv.style.right = '';
+    wv.style.bottom = '';
+  }
+});
+wvOpenExt.addEventListener('click', ()=>{
+  const v = activeWvTab()?.url || wvUrl.value;
+  if(v) window.open(v, '_blank', 'noopener');
+});
+wvTryDdg.addEventListener('click', ()=>{
+  const q = wvUrl.value || (activeWvTab()?.url || '');
+  const query = q.replace(/^https?:\/\/[^/]+\//,'').replace(/[?&].*$/,'');
+  wvEngineSelect.value = 'ddg';
+  loadWvUrl('https://lite.duckduckgo.com/lite/?q=' + encodeURIComponent(query));
+});
+
+/* --- Drag widget --- */
+let wvDrag = null;
+wvBar.addEventListener('mousedown', e=>{
+  if(e.target.closest('button') || e.target.closest('input') || e.target.closest('select') || e.target.closest('.pxm-wv-dots span')) return;
+  e.preventDefault();
+  const r = wv.getBoundingClientRect();
+  wvDrag = { sx:e.clientX, sy:e.clientY, ox:r.left, oy:r.top };
+  document.addEventListener('mousemove', onWvDragMove);
+  document.addEventListener('mouseup', onWvDragEnd);
+});
+wvBar.addEventListener('touchstart', e=>{
+  if(e.target.closest('button') || e.target.closest('input') || e.target.closest('select') || e.target.closest('.pxm-wv-dots span')) return;
+  const t = e.touches[0];
+  const r = wv.getBoundingClientRect();
+  wvDrag = { sx:t.clientX, sy:t.clientY, ox:r.left, oy:r.top };
+  document.addEventListener('touchmove', onWvDragTouch, {passive:false});
+  document.addEventListener('touchend', onWvDragEnd);
+}, {passive:true});
+function onWvDragMove(e){
+  if(!wvDrag) return;
+  placeWv(wvDrag.ox + (e.clientX-wvDrag.sx), wvDrag.oy + (e.clientY-wvDrag.sy));
+}
+function onWvDragTouch(e){
+  if(!wvDrag) return;
+  e.preventDefault();
+  const t = e.touches[0];
+  placeWv(wvDrag.ox + (t.clientX-wvDrag.sx), wvDrag.oy + (t.clientY-wvDrag.sy));
+}
+function onWvDragEnd(){
+  wvDrag = null;
+  document.removeEventListener('mousemove', onWvDragMove);
+  document.removeEventListener('mouseup', onWvDragEnd);
+  document.removeEventListener('touchmove', onWvDragTouch);
+  document.removeEventListener('touchend', onWvDragEnd);
+}
+function placeWv(x, y){
+  const w = wv.offsetWidth, h = wv.offsetHeight;
+  const maxX = window.innerWidth - w - 8;
+  const maxY = window.innerHeight - h - 8;
+  x = Math.max(8, Math.min(maxX, x));
+  y = Math.max(8, Math.min(maxY, y));
+  wv.style.left = x+'px';
+  wv.style.top = y+'px';
+  wv.style.right = 'auto';
+  wv.style.bottom = 'auto';
+}
+
+/* --- Resize widget --- */
+let wvRes = null;
+wvResize.addEventListener('mousedown', e=>{
+  e.preventDefault();
+  const r = wv.getBoundingClientRect();
+  wvRes = { sx:e.clientX, sy:e.clientY, sw:r.width, sh:r.height };
+  document.addEventListener('mousemove', onWvResMove);
+  document.addEventListener('mouseup', onWvResEnd);
+});
+wvResize.addEventListener('touchstart', e=>{
+  const t = e.touches[0];
+  const r = wv.getBoundingClientRect();
+  wvRes = { sx:t.clientX, sy:t.clientY, sw:r.width, sh:r.height };
+  document.addEventListener('touchmove', onWvResTouch, {passive:false});
+  document.addEventListener('touchend', onWvResEnd);
+}, {passive:true});
+function onWvResMove(e){
+  if(!wvRes) return;
+  const nw = Math.max(280, wvRes.sw + (e.clientX-wvRes.sx));
+  const nh = Math.max(200, wvRes.sh + (e.clientY-wvRes.sy));
+  wv.style.width = nw+'px';
+  wv.style.height = nh+'px';
+}
+function onWvResTouch(e){
+  if(!wvRes) return;
+  e.preventDefault();
+  const t = e.touches[0];
+  const nw = Math.max(280, wvRes.sw + (t.clientX-wvRes.sx));
+  const nh = Math.max(200, wvRes.sh + (t.clientY-wvRes.sy));
+  wv.style.width = nw+'px';
+  wv.style.height = nh+'px';
+}
+function onWvResEnd(){
+  wvRes = null;
+  document.removeEventListener('mousemove', onWvResMove);
+  document.removeEventListener('mouseup', onWvResEnd);
+  document.removeEventListener('touchmove', onWvResTouch);
+  document.removeEventListener('touchend', onWvResEnd);
+}
+
+/* ============================================================
+   8. IN-PANEL BROWSER → ⧉ Float opens webview
+============================================================ */
+$('#pxmGo')?.addEventListener('click', ()=>{
+  const v = $('#pxmUrl').value.trim();
+  if(!v) return;
+  const u = computeSearchUrl(v);
+  $('#pxmBrowserFrame').src = u;
+});
+$('#pxmUrl')?.addEventListener('keydown', e=>{
+  if(e.key==='Enter'){
+    e.preventDefault();
+    const v = e.target.value.trim();
+    if(!v) return;
+    $('#pxmBrowserFrame').src = computeSearchUrl(v);
+  }
+});
+$('#pxmReset')?.addEventListener('click', ()=>{
+  $('#pxmUrl').value = '';
+  $('#pxmBrowserFrame').src = 'about:blank';
+});
+$('#pxmPopOut')?.addEventListener('click', ()=>{
+  const v = $('#pxmUrl').value.trim();
+  closePanel();
+  openWebView(v ? computeSearchUrl(v) : '');
+});
+
+/* ============================================================
+   9. BLOG LIGHTBOX
+============================================================ */
+const lightbox = $('#pxmLightbox');
+const lbImg = $('#pxmLbImg');
+const lbClose = $('#pxmLbClose');
+const lbPrev = $('#pxmLbPrev');
+const lbNext = $('#pxmLbNext');
+const lbCount = $('#pxmLbCount');
+const photoImgs = $$('#pxmPhotoGrid img');
+const photoSrcs = Array.from(photoImgs).map(i=>i.src);
+let lbIndex = 0;
+
+function openLightbox(i){
+  lbIndex = i;
+  lbImg.src = photoSrcs[i];
+  lbCount.textContent = (i+1)+' / '+photoSrcs.length;
+  lightbox.classList.add('pxm-open');
+  lightbox.setAttribute('aria-hidden','false');
+}
+function closeLightbox(){
+  lightbox.classList.remove('pxm-open');
+  lightbox.setAttribute('aria-hidden','true');
+}
+function lbGo(dir){
+  lbIndex = (lbIndex + dir + photoSrcs.length) % photoSrcs.length;
+  lbImg.src = photoSrcs[lbIndex];
+  lbCount.textContent = (lbIndex+1)+' / '+photoSrcs.length;
+}
+photoImgs.forEach((img,i)=>img.addEventListener('click', ()=>openLightbox(i)));
+lbClose.addEventListener('click', closeLightbox);
+lbPrev.addEventListener('click', ()=>lbGo(-1));
+lbNext.addEventListener('click', ()=>lbGo(1));
+lightbox.addEventListener('click', e=>{ if(e.target===lightbox) closeLightbox(); });
+
+/* ============================================================
+   10. GLOBAL KEYBOARD
+============================================================ */
+document.addEventListener('keydown', e=>{
+  if(e.key === 'Escape'){
+    if(panel.classList.contains('pxm-open')) closePanel();
+    if(waChat.classList.contains('pxm-open')) closeWaChat();
+    if(wv.classList.contains('pxm-open')) closeWebView();
+    if(lightbox.classList.contains('pxm-open')) closeLightbox();
+  }
+  if(lightbox.classList.contains('pxm-open')){
+    if(e.key==='ArrowLeft')  lbGo(-1);
+    if(e.key==='ArrowRight') lbGo(1);
+  }
+  // Ctrl/Cmd + T → new webview tab
+  if((e.ctrlKey||e.metaKey) && e.key === 't' && wv.classList.contains('pxm-open')){
+    e.preventDefault(); newWvTab('');
+  }
+});
+
+/* ============================================================
+   INIT
+============================================================ */
+newWvTab(''); // preload an empty tab so tabs bar isn't empty
+renderWvTabs();
+console.log('%c🚀 PritomX v2 — Smart Bot + Multi-Tab Browser ready','color:#6c8cff;font-size:13px;font-weight:bold');
+})();
+</script>
+</body>
+  </html>
